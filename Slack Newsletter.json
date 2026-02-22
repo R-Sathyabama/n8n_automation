@@ -1,0 +1,349 @@
+{
+  "name": "Slack Newsletter - SLACK TRIGGER FINAL",
+  "nodes": [
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "let message = '';\nif ($json.event && $json.event.text) { message = $json.event.text; }\nelse if ($json.text) { message = $json.text; }\n\n// Extract from blocks if text is empty\nif (!message || message.trim() === '') {\n  const blocks = ($json.event && $json.event.blocks) || $json.blocks || [];\n  try {\n    blocks.forEach(block => {\n      if (block.elements) {\n        block.elements.forEach(el => {\n          if (el.elements) { el.elements.forEach(inner => { if (inner.text) message += inner.text + ' '; }); }\n          if (el.text) message += el.text + ' ';\n        });\n      }\n    });\n    message = message.trim();\n  } catch(e) { message = ''; }\n}\n\n// Bot/system filter\nconst event = $json.event || $json;\nconst isBot = !!(event.bot_id || event.subtype === 'bot_message' || $json.bot_id);\nconst isSystem = ['channel_join','channel_leave','channel_purpose','channel_name'].includes(event.subtype || '');\nconst hasKeyword = /news|newsletter|செய்தி|समाचार|വാർത്ത|ಸುದ್ದಿ|خبر/i.test(message);\n\nif (isBot || isSystem || !hasKeyword || !message) {\n  return { skip: true, channelId: '', userId: '', ts: '', originalMessage: '', currentDate: '' };\n}\n\nmessage = message.replace(/<@[A-Z0-9]+>/g, '').replace(/\\s+/g, ' ').trim();\n\nconst channelId = (event.channel) || $json.channel || '';\nconst userId = (event.user) || $json.user || '';\nconst ts = (event.ts) || $json.ts || '';\nconst currentDate = new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });\n\nreturn { skip: false, originalMessage: message, channelId, userId, ts, currentDate };"
+      },
+      "id": "b6ff6e6d-94d7-4985-a4ff-715f3104c4bd",
+      "name": "Extract Topic and Language",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -736,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "skip-check",
+              "leftValue": "={{ $json.skip }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "072d4802-c0c8-40f7-8edc-bf8fea9f2611",
+      "name": "Is Valid Request?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        -496,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const msg = $json.originalMessage || '';\n\n// Language detection via Unicode ranges\nfunction detectLanguage(text) {\n  if (/[\\u0B80-\\u0BFF]/.test(text)) return { code: 'ta', name: 'Tamil' };\n  if (/[\\u0D00-\\u0D7F]/.test(text)) return { code: 'ml', name: 'Malayalam' };\n  if (/[\\u0900-\\u097F]/.test(text)) return { code: 'hi', name: 'Hindi' };\n  if (/[\\u0C00-\\u0C7F]/.test(text)) return { code: 'te', name: 'Telugu' };\n  if (/[\\u0C80-\\u0CFF]/.test(text)) return { code: 'kn', name: 'Kannada' };\n  if (/[\\u0600-\\u06FF]/.test(text)) return { code: 'ar', name: 'Arabic' };\n  return { code: 'en', name: 'English' };\n}\n\nconst translations = {\n  'தமிழ்நாடு':'Tamil Nadu','இந்தியா':'India','சென்னை':'Chennai',\n  'கேரளா':'Kerala','மும்பை':'Mumbai','டெல்லி':'Delhi',\n  'கோவை':'Coimbatore','மதுரை':'Madurai',\n  'அரசியல்':'politics','கட்சி':'party','திமுக':'DMK','அதிமுக':'AIADMK',\n  'தேர்தல்':'election','அரசு':'government','முதலமைச்சர்':'Chief Minister',\n  'விளையாட்டு':'sports','கிரிக்கெட்':'cricket','கால்பந்து':'football',\n  'வணிகம்':'business','பொருளாதாரம்':'economy','பங்குச்சந்தை':'stock market',\n  'தொழில்நுட்பம்':'technology','செயற்கை நுண்ணறிவு':'artificial intelligence',\n  'சினிமா':'cinema','திரைப்படம்':'movie','இசை':'music',\n  'கல்வி':'education','சுகாதாரம்':'health',\n  'இன்றைய':'today','தமிழ்':'Tamil',\n  'செய்திகள்':'','செய்தி':''\n};\n\nconst language = detectLanguage(msg);\n\nlet topic = msg\n  .replace(/generate newsletter for|generate newsletter about|create newsletter for|newsletter for|newsletter about|newsletter/gi, '')\n  .replace(/செய்திமடல்|செய்திகள்|செய்தி/g, '')\n  .replace(/\\s+/g, ' ').trim();\n\nlet searchQuery = topic;\nObject.entries(translations).forEach(([k, v]) => {\n  searchQuery = searchQuery.replace(new RegExp(k, 'g'), v);\n});\nsearchQuery = searchQuery.replace(/[\\u0B80-\\u0BFF\\u0D00-\\u0D7F\\u0900-\\u097F\\u0600-\\u06FF]+/g,'').replace(/\\s+/g,' ').trim().substring(0,80) || 'latest news India';\n\n// UI strings per language\nconst uiStrings = {\n  ta: { latest_news:'சமீபத்திய செய்திகள்', more_news:'மேலும் செய்திகள்', more_stories:'மேலும் கதைகள்', read_more:'மேலும் படிக்க', read_full_story:'முழு கதையை படிக்க', trending:'பிரபலமான', breaking:'முக்கிய செய்தி', daily_digest:'தினசரி செய்தி தொகுப்பு', newsletter_word:'செய்திமடல்', edition:'பதிப்பு', stories:'செய்திகள்', digest_tagline:'உங்கள் தினசரி AI செய்தி தொகுப்பு' },\n  ml: { latest_news:'ഏറ്റവും പുതിയ വാർത്തകൾ', more_news:'കൂടുതൽ വാർത്തകൾ', more_stories:'കൂടുതൽ കഥകൾ', read_more:'കൂടുതൽ വായിക്കുക', read_full_story:'പൂർണ്ണ കഥ വായിക്കുക', trending:'ട്രെൻഡിംഗ്', breaking:'ബ്രേക്കിംഗ്', daily_digest:'ദൈനംദിന വാർത്ത', newsletter_word:'വാർത്താക്കുറിപ്പ്', edition:'പതിപ്പ്', stories:'വാർത്തകൾ', digest_tagline:'നിങ്ങളുടെ ദൈനംദിന AI വാർത്ത' },\n  hi: { latest_news:'ताज़ा खबरें', more_news:'अधिक खबरें', more_stories:'अधिक कहानियां', read_more:'और पढ़ें', read_full_story:'पूरी खबर पढ़ें', trending:'ट्रेंडिंग', breaking:'ब्रेकिंग', daily_digest:'दैनिक समाचार', newsletter_word:'न्यूज़लेटर', edition:'संस्करण', stories:'खबरें', digest_tagline:'आपका दैनिक AI समाचार संग्रह' },\n  te: { latest_news:'తాజా వార్తలు', more_news:'మరిన్ని వార్తలు', more_stories:'మరిన్ని కథలు', read_more:'మరింత చదవండి', read_full_story:'పూర్తి కథనం చదవండి', trending:'ట్రెండింగ్', breaking:'బ్రేకింగ్', daily_digest:'రోజువారీ వార్తలు', newsletter_word:'వార్తాలేఖ', edition:'సంచిక', stories:'వార్తలు', digest_tagline:'మీ రోజువారీ AI వార్తల సంకలనం' },\n  kn: { latest_news:'ತಾಜಾ ಸುದ್ದಿ', more_news:'ಹೆಚ್ಚಿನ ಸುದ್ದಿ', more_stories:'ಹೆಚ್ಚಿನ ಕಥೆಗಳು', read_more:'ಹೆಚ್ಚು ಓದಿ', read_full_story:'ಪೂರ್ಣ ಕಥೆ ಓದಿ', trending:'ಟ್ರೆಂಡಿಂಗ್', breaking:'ಬ್ರೇಕಿಂಗ್', daily_digest:'ದೈನಂದಿನ ಸುದ್ದಿ', newsletter_word:'ಸುದ್ದಿಪತ್ರ', edition:'ಆವೃತ್ತಿ', stories:'ಸುದ್ದಿಗಳು', digest_tagline:'ನಿಮ್ಮ ದೈನಂದಿನ AI ಸುದ್ದಿ ಸಂಗ್ರಹ' },\n  en: { latest_news:'LATEST NEWS', more_news:'MORE NEWS', more_stories:'MORE STORIES', read_more:'Read More', read_full_story:'READ FULL STORY', trending:'TRENDING', breaking:'BREAKING', daily_digest:'DAILY DIGEST · AI-POWERED', newsletter_word:'Newsletter', edition:'EDITION', stories:'STORIES', digest_tagline:'YOUR DAILY AI-CURATED NEWS DIGEST' }\n};\n\nconst ui = uiStrings[language.code] || uiStrings.en;\n\nconst langMap = {\n  ta:{hl:'ta',gl:'IN',ceid:'IN:ta'}, ml:{hl:'ml',gl:'IN',ceid:'IN:ml'},\n  hi:{hl:'hi',gl:'IN',ceid:'IN:hi'}, te:{hl:'te',gl:'IN',ceid:'IN:te'},\n  kn:{hl:'kn',gl:'IN',ceid:'IN:kn'}, en:{hl:'en',gl:'IN',ceid:'IN:en'}\n};\nconst langParams = langMap[language.code] || langMap.en;\n\nreturn [{\n  skip: false, topic: topic || 'Latest News', searchQuery, language, ui, langParams,\n  channelId: $json.channelId, userId: $json.userId, ts: $json.ts,\n  currentDate: $json.currentDate, originalMessage: msg\n}];"
+      },
+      "id": "b014d161-9f1e-4bb8-8e24-71abdbcd7f0d",
+      "name": "Detect Language and Build Params",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        144
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "={{ $json.channelId }}",
+          "mode": "id"
+        },
+        "text": "={{ '⏳ Generating *' + $json.topic + '* newsletter... Please wait!' }}",
+        "otherOptions": {
+          "mrkdwn": true
+        }
+      },
+      "id": "7564bb22-258f-4e5b-b6b7-b1df47fe57f0",
+      "name": "Send Processing Message",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "2401edc6-dc74-418e-9b6d-34c5670a9317",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "ToESnWkpIhn9kiaK",
+          "name": "Slack oauth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ 'https://news.google.com/rss/search?q=' + encodeURIComponent($json.searchQuery) + '+when:2d&hl=' + $json.langParams.hl + '&gl=' + $json.langParams.gl + '&ceid=' + $json.langParams.ceid }}",
+        "options": {}
+      },
+      "id": "c6b4de73-2fea-4254-bd85-9019226a0759",
+      "name": "Fetch Google News RSS",
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst prev = $('Detect Language and Build Params').first().json;\n\nfunction cleanTitle(t) {\n  if (!t) return '';\n  return t.replace(/\\s+-\\s+[^-]+$/, '').trim();\n}\nfunction cleanDesc(d) {\n  if (!d) return '';\n  return d.replace(/<[^>]*>/g,'').replace(/&amp;/g,'&').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'\"').replace(/&#39;/g,\"'\").trim();\n}\nfunction extractSource(item) {\n  const title = item.json.title || '';\n  const match = title.match(/\\s+-\\s+([^-]+)$/);\n  if (match) return match[1].trim();\n  return item.json.creator || 'News';\n}\nfunction extractImage(item) {\n  // 1. RSS enclosure\n  if (item.json.enclosure && item.json.enclosure.url && /\\.(jpg|jpeg|png|webp)/i.test(item.json.enclosure.url)) return item.json.enclosure.url;\n  // 2. media fields\n  if (item.json['media:content'] && item.json['media:content'].url) return item.json['media:content'].url;\n  if (item.json['media:thumbnail'] && item.json['media:thumbnail'].url) return item.json['media:thumbnail'].url;\n  // 3. og:image in description HTML\n  const desc = item.json.description || item.json.content || '';\n  const ogMatch = desc.match(/property=[\"']og:image[\"'][^>]+content=[\"']([^\"']+)[\"']/i) ||\n                  desc.match(/content=[\"']([^\"']+)[\"'][^>]+property=[\"']og:image[\"']/i);\n  if (ogMatch && ogMatch[1].startsWith('http')) return ogMatch[1];\n  // 4. any img src in description\n  const imgMatch = desc.match(/<img[^>]+src=[\"']([^\"']+)[\"']/i);\n  if (imgMatch && imgMatch[1].startsWith('http')) return imgMatch[1];\n  return '';\n}\n\n// Build topic keyword for fallback images (English words only)\nconst topicKeyword = (prev.searchQuery || prev.topic || 'news')\n  .split(' ').filter(w => w.length > 2 && /^[a-zA-Z]/.test(w)).slice(0,3).join(' ') || 'news india';\n\nconst seenTitles = new Set();\nconst filtered = items\n  .filter(i => {\n    const title = cleanTitle(i.json.title || '');\n    const isValid = title.length > 5 && title !== '(no subject)' && !seenTitles.has(title.toLowerCase());\n    if (isValid) seenTitles.add(title.toLowerCase());\n    return isValid && !!(i.json.link || i.json.url);\n  })\n  .slice(0, 10)\n  .map((item, i) => ({\n    number: i+1,\n    title: cleanTitle(item.json.title || 'News Article'),\n    description: cleanDesc(item.json.contentSnippet || item.json.description || item.json.summary || 'Click to read the full article.'),\n    source: extractSource(item),\n    url: item.json.link || item.json.url || '#',\n    date: item.json.pubDate ? new Date(item.json.pubDate).toLocaleDateString('en-GB') : 'Today',\n    image: extractImage(item)\n  }));\n\nconst slackArticles = filtered.slice(0,5).map(a => ({\n  title: a.title.length > 65 ? a.title.substring(0,65)+'...' : a.title,\n  url: a.url, source: a.source\n}));\n\nreturn [{\n  topic: prev.topic, language: prev.language, ui: prev.ui, langParams: prev.langParams,\n  channelId: prev.channelId, userId: prev.userId, currentDate: prev.currentDate,\n  articles: filtered, articleCount: filtered.length, slackArticles, topicKeyword\n}];"
+      },
+      "id": "5570da3c-c2f5-4d01-901d-b961fb467191",
+      "name": "Prepare Articles",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst articles = input.articles || [];\nconst topic = input.topic || 'Latest News';\nconst lang = input.language || { code: 'en', name: 'English' };\nconst currentDate = input.currentDate || new Date().toLocaleDateString();\nconst channelId = input.channelId || '';\nconst articleCount = input.articleCount || 0;\nconst slackArticles = input.slackArticles || [];\nconst topicKeyword = input.topicKeyword || 'news india';\nconst ui = input.ui || {\n  latest_news:'LATEST NEWS', more_news:'MORE NEWS', more_stories:'MORE STORIES',\n  read_more:'Read More', read_full_story:'READ FULL STORY', trending:'TRENDING',\n  breaking:'BREAKING', daily_digest:'DAILY DIGEST · AI-POWERED',\n  newsletter_word:'Newsletter', edition:'EDITION', stories:'STORIES',\n  digest_tagline:'YOUR DAILY AI-CURATED NEWS DIGEST'\n};\n\nfunction esc(s) { return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\"/g,'&quot;'); }\nfunction trunc(s, n) { if (!s) return ''; return s.length <= n ? s : s.substring(0,n)+'…'; }\nconst initial = (topic.replace(/[^a-zA-Z\\u0B80-\\u0BFF\\u0D00-\\u0D7F\\u0900-\\u097F]/g,'').charAt(0)||'N').toUpperCase();\n\nconst hero        = articles[0] || {};\nconst card1       = articles[1] || {};\nconst card2       = articles[2] || {};\nconst sideNews    = articles.slice(3, 7);\nconst moreStories = articles.slice(7, 11);\n\nconst cats = [\n  {l:'Breaking',c:'#e53935'},{l:'Analysis',c:'#1e88e5'},\n  {l:'World',c:'#43a047'},{l:'Business',c:'#fb8c00'},\n  {l:'Technology',c:'#8e24aa'},{l:'Politics',c:'#039be5'},\n  {l:'Science',c:'#00acc1'},{l:'Sports',c:'#7cb342'}\n];\n\n// ─────────────────────────────────────────────────────────────\n// SMART IMAGE FUNCTION\n// Priority: 1) Real RSS image  2) Unique picsum per article URL\n// Each article gets a DIFFERENT image using its index as seed\n// ─────────────────────────────────────────────────────────────\nfunction getImg(slotIndex, w, h) {\n  const article = articles[slotIndex];\n  // Use real image from RSS if it has proper image extension\n  if (article && article.image &&\n      article.image.startsWith('http') &&\n      /\\.(jpg|jpeg|png|webp|gif)/i.test(article.image)) {\n    return article.image;\n  }\n  // Generate a unique seed per article using its title\n  // This ensures each slot always shows a DIFFERENT image\n  const title = (article && article.title) ? article.title : '';\n  const uniqueNum = title.split('').reduce((acc, c) => acc + c.charCodeAt(0), slotIndex * 100);\n  const seed = uniqueNum % 1000;\n  return `https://picsum.photos/seed/${seed}/${w}/${h}`;\n}\n\nfunction badge(idx) {\n  const c = cats[idx % cats.length];\n  return `<span style=\"display:inline-block;background:${c.c};color:#fff;font-size:9px;font-weight:700;padding:3px 10px;border-radius:12px;letter-spacing:1px;margin-bottom:10px;font-family:Arial,sans-serif;\">${c.l.toUpperCase()}</span>`;\n}\n\nconst tickerText = articles.slice(0,8).map(a => `🔹 ${esc(a.title)}`).join('&nbsp;&nbsp;&nbsp;&nbsp;');\n\nconst heroHtml = !hero.title ? '' : `\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr valign=\"top\">\n  <td width=\"52%\" style=\"padding-right:18px;\">\n    <img src=\"${getImg(0,340,210)}\" width=\"340\" height=\"210\" style=\"display:block;width:100%;height:210px;object-fit:cover;border-radius:8px;border:1px solid #eee;\" alt=\"\">\n  </td>\n  <td width=\"48%\" valign=\"top\">\n    ${badge(0)}\n    <h2 style=\"margin:0 0 10px;font-size:18px;line-height:1.4;font-weight:700;color:#1a1a2e;font-family:Georgia,serif;\">\n      <a href=\"${esc(hero.url)}\" target=\"_blank\" style=\"color:#1a1a2e;text-decoration:none;\">${esc(hero.title)}</a>\n    </h2>\n    <p style=\"font-size:11px;color:#e53935;font-style:italic;margin:0 0 10px;font-family:Arial,sans-serif;\">📍 ${esc(hero.source)} &nbsp;|&nbsp; ${esc(hero.date)}</p>\n    <p style=\"font-size:13px;line-height:1.8;color:#555;margin:0 0 16px;font-family:Arial,sans-serif;\">${esc(trunc(hero.description,200))}</p>\n    <a href=\"${esc(hero.url)}\" target=\"_blank\" style=\"display:inline-block;background:#1a1a2e;color:#fff;padding:10px 22px;text-decoration:none;font-size:11px;font-weight:700;border-radius:6px;letter-spacing:1px;font-family:Arial,sans-serif;\">${esc(ui.read_full_story)} →</a>\n  </td>\n</tr></table>`;\n\nfunction twoCol(story, slotIdx) {\n  if (!story.title) return '<td width=\"50%\"></td>';\n  return `\n<td width=\"50%\" valign=\"top\" style=\"padding:${slotIdx===0?'0 9px 0 0':'0 0 0 9px'};\">\n  <div style=\"border:1px solid #eee;border-radius:8px;overflow:hidden;background:#fff;\">\n    <img src=\"${getImg(slotIdx+1,280,150)}\" width=\"280\" height=\"150\" style=\"display:block;width:100%;height:150px;object-fit:cover;\" alt=\"\">\n    <div style=\"padding:14px;\">\n      ${badge(slotIdx+1)}\n      <h3 style=\"margin:0 0 7px;font-size:13px;line-height:1.45;font-weight:700;font-family:Georgia,serif;\">\n        <a href=\"${esc(story.url)}\" target=\"_blank\" style=\"color:#1a1a2e;text-decoration:none;\">${esc(trunc(story.title,75))}</a>\n      </h3>\n      <p style=\"font-size:11px;color:#e53935;font-style:italic;margin:0 0 7px;font-family:Arial,sans-serif;\">${esc(story.source)} · ${esc(story.date)}</p>\n      <p style=\"font-size:12px;line-height:1.6;color:#666;margin:0 0 10px;font-family:Arial,sans-serif;\">${esc(trunc(story.description,120))}</p>\n      <a href=\"${esc(story.url)}\" target=\"_blank\" style=\"font-size:11px;color:#1e88e5;font-weight:700;text-decoration:none;font-family:Arial,sans-serif;\">${esc(ui.read_more)} →</a>\n    </div>\n  </div>\n</td>`;\n}\n\nfunction sideCard(story, idx) {\n  if (!story.title) return '';\n  const c = cats[idx % cats.length];\n  return `\n<div style=\"padding:12px 0;${idx<sideNews.length-1?'border-bottom:1px solid #eeeeee;':''}\">\n  <table cellpadding=\"0\" cellspacing=\"0\" width=\"100%\"><tr valign=\"top\">\n    <td width=\"24\" style=\"padding-right:8px;padding-top:2px;\">\n      <div style=\"width:20px;height:20px;background:${c.c};border-radius:50%;text-align:center;line-height:20px;color:#fff;font-size:9px;font-weight:700;\">${idx+1}</div>\n    </td>\n    <td>\n      <a href=\"${esc(story.url)}\" target=\"_blank\" style=\"color:#1a1a2e;text-decoration:none;font-size:12px;font-weight:700;line-height:1.4;display:block;margin-bottom:3px;font-family:Arial,sans-serif;\">${esc(trunc(story.title,55))}</a>\n      <p style=\"font-size:10px;color:#888;margin:0 0 4px;line-height:1.4;font-family:Arial,sans-serif;\">${esc(trunc(story.description,60))}</p>\n      <a href=\"${esc(story.url)}\" target=\"_blank\" style=\"font-size:10px;color:#e53935;font-weight:700;text-decoration:none;font-family:Arial,sans-serif;\">${esc(ui.read_more)} →</a>\n    </td>\n  </tr></table>\n</div>`;\n}\n\nfunction moreCard(story, idx) {\n  if (!story || !story.title) return '<td width=\"25%\" style=\"padding:0 5px;\"></td>';\n  const c = cats[(idx+4) % cats.length];\n  return `\n<td width=\"25%\" valign=\"top\" style=\"padding:0 5px;\">\n  <div style=\"background:#fff;border-radius:8px;overflow:hidden;border:1px solid #eee;\">\n    <img src=\"${getImg(idx+7,200,110)}\" width=\"200\" height=\"110\" style=\"display:block;width:100%;height:110px;object-fit:cover;\" alt=\"\">\n    <div style=\"padding:11px;\">\n      <span style=\"display:inline-block;background:${c.c};color:#fff;font-size:8px;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:1px;margin-bottom:7px;font-family:Arial,sans-serif;\">${c.l.toUpperCase()}</span>\n      <a href=\"${esc(story.url)}\" target=\"_blank\" style=\"color:#1a1a2e;text-decoration:none;font-size:11px;font-weight:700;line-height:1.4;display:block;margin-bottom:5px;font-family:Arial,sans-serif;\">${esc(trunc(story.title,48))}</a>\n      <p style=\"font-size:10px;color:#777;line-height:1.5;margin:0 0 7px;font-family:Arial,sans-serif;\">${esc(trunc(story.description,55))}</p>\n      <a href=\"${esc(story.url)}\" target=\"_blank\" style=\"font-size:10px;color:#e53935;font-weight:700;text-decoration:none;font-family:Arial,sans-serif;\">${esc(ui.read_more)} →</a>\n    </div>\n  </div>\n</td>`;\n}\n\nconst hashtags = topic.split(' ').filter(w=>w.length>2).slice(0,5)\n  .map(w=>`<span style=\"background:#f0f4ff;color:#1e88e5;font-size:10px;padding:4px 10px;border-radius:10px;margin:3px;display:inline-block;font-family:Arial,sans-serif;font-weight:600;\">#${w.charAt(0).toUpperCase()+w.slice(1)}</span>`)\n  .join('');\n\nconst editionNum = Math.floor(Math.random()*800+100);\n\nconst html = `<!DOCTYPE html>\n<html lang=\"${lang.code}\">\n<head><meta charset=\"UTF-8\"><title>${esc(topic)} ${esc(ui.newsletter_word)}</title></head>\n<body style=\"margin:0;padding:0;background:#eef0f4;\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" bgcolor=\"#eef0f4\">\n<tr><td align=\"center\" style=\"padding:24px 10px;\">\n<table width=\"680\" cellpadding=\"0\" cellspacing=\"0\" style=\"max-width:680px;width:100%;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 6px 30px rgba(0,0,0,0.09);\">\n\n<tr><td style=\"background:linear-gradient(90deg,#e53935,#fb8c00,#e53935);height:5px;font-size:0;\">&nbsp;</td></tr>\n\n<tr><td style=\"background:#fff;padding:30px 26px 22px;text-align:center;\">\n  <div style=\"width:54px;height:54px;background:linear-gradient(135deg,#e53935,#fb8c00);border-radius:50%;border:3px solid #ffd700;margin:0 auto 14px;text-align:center;line-height:54px;font-size:22px;font-weight:700;color:#fff;\">${esc(initial)}</div>\n  <div style=\"font-size:10px;color:#aaa;letter-spacing:3px;margin-bottom:7px;font-family:Arial,sans-serif;\">${esc(ui.daily_digest)}</div>\n  <div style=\"font-size:26px;font-weight:700;color:#1a1a2e;margin-bottom:6px;font-family:Georgia,serif;\">${esc(trunc(topic,45))} <span style=\"color:#e53935;font-size:16px;font-weight:400;\">${esc(ui.newsletter_word)}</span></div>\n  <div style=\"font-size:12px;color:#777;margin-bottom:5px;font-family:Arial,sans-serif;\">${esc(currentDate)}</div>\n  <div style=\"font-size:10px;color:#aaa;font-family:Arial,sans-serif;\">${esc(ui.edition)} #${editionNum} · ${articleCount} ${esc(ui.stories)}</div>\n</td></tr>\n\n<tr><td style=\"background:linear-gradient(90deg,#e53935,#fb8c00,#e53935);height:2px;font-size:0;\">&nbsp;</td></tr>\n\n<tr><td style=\"background:#fff3e0;padding:7px 0;border-top:1px solid #ffcc80;border-bottom:1px solid #ffcc80;\">\n  <marquee behavior=\"scroll\" direction=\"left\" scrollamount=\"4\" style=\"font-size:11px;color:#333;font-weight:600;white-space:nowrap;font-family:Arial,sans-serif;\">${tickerText}</marquee>\n</td></tr>\n\n<tr><td style=\"padding:0;\">\n<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr valign=\"top\">\n\n<td width=\"72%\" style=\"padding:22px 16px 22px 22px;border-right:1px solid #f0f0f0;\">\n  <div style=\"margin-bottom:20px;padding-bottom:20px;border-bottom:1px solid #f0f0f0;\">${heroHtml}</div>\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:16px;\"><tr>\n    <td width=\"auto\"><span style=\"background:#1a1a2e;color:#ffd700;font-size:9px;font-weight:700;padding:5px 14px;letter-spacing:2px;border-radius:4px;font-family:Arial,sans-serif;\">${esc(ui.more_news)}</span></td>\n    <td style=\"padding-left:12px;\"><div style=\"height:1px;background:#eee;\"></div></td>\n  </tr></table>\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr valign=\"top\">${twoCol(card1,0)}${twoCol(card2,1)}</tr></table>\n</td>\n\n<td width=\"28%\" style=\"padding:0;background:#f8f9fc;\">\n  <div style=\"background:#2d3748;padding:13px 14px;text-align:center;\">\n    <div style=\"font-size:11px;font-weight:700;color:#fff;letter-spacing:2px;font-family:Arial,sans-serif;\">${esc(ui.latest_news)}</div>\n  </div>\n  <div style=\"padding:8px 13px 12px;\">${sideNews.map((s,i)=>sideCard(s,i)).join('')}</div>\n  <div style=\"padding:10px 13px 14px;border-top:1px solid #eee;background:#fff;\">\n    <div style=\"color:#aaa;font-size:9px;letter-spacing:2px;margin-bottom:7px;font-family:Arial,sans-serif;\">🏷 ${esc(ui.trending)}</div>\n    ${hashtags}\n  </div>\n</td>\n</tr></table>\n</td></tr>\n\n${moreStories.filter(s=>s&&s.title).length>0?`\n<tr><td style=\"padding:20px 16px;border-top:2px solid #f0f0f0;background:#f8f9fc;\">\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" style=\"margin-bottom:14px;\"><tr>\n    <td><span style=\"background:#1a1a2e;color:#ffd700;font-size:9px;font-weight:700;padding:5px 14px;letter-spacing:2px;border-radius:4px;font-family:Arial,sans-serif;\">${esc(ui.more_stories)}</span></td>\n    <td align=\"right\" style=\"font-size:10px;color:#aaa;font-family:Arial,sans-serif;\">${esc(currentDate)}</td>\n  </tr></table>\n  <table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\"><tr valign=\"top\">\n    ${moreStories.filter(s=>s&&s.title).slice(0,4).map((s,i)=>moreCard(s,i)).join('')}\n  </tr></table>\n</td></tr>`:''}\n\n<tr><td style=\"background:#2d3748;padding:26px;text-align:center;\">\n  <div style=\"width:40px;height:40px;background:linear-gradient(135deg,#e53935,#fb8c00);border-radius:50%;border:2px solid #ffd700;margin:0 auto 12px;text-align:center;line-height:40px;font-size:16px;font-weight:700;color:#fff;\">${esc(initial)}</div>\n  <div style=\"font-size:14px;color:#fff;font-weight:700;margin-bottom:4px;font-family:Georgia,serif;\">${esc(trunc(topic,40))} ${esc(ui.newsletter_word)}</div>\n  <div style=\"font-size:9px;color:#ffd700;letter-spacing:2px;margin-bottom:16px;font-family:Arial,sans-serif;\">${esc(ui.digest_tagline)}</div>\n  <div style=\"margin-bottom:14px;\">\n    <a href=\"#\" style=\"color:#a0aec0;text-decoration:none;font-size:10px;margin:0 8px;font-family:Arial,sans-serif;\">Home</a>|\n    <a href=\"#\" style=\"color:#a0aec0;text-decoration:none;font-size:10px;margin:0 8px;font-family:Arial,sans-serif;\">About</a>|\n    <a href=\"#\" style=\"color:#a0aec0;text-decoration:none;font-size:10px;margin:0 8px;font-family:Arial,sans-serif;\">Contact</a>|\n    <a href=\"#\" style=\"color:#a0aec0;text-decoration:none;font-size:10px;margin:0 8px;font-family:Arial,sans-serif;\">Unsubscribe</a>\n  </div>\n  <div style=\"font-size:10px;color:#718096;font-family:Arial,sans-serif;\">© ${new Date().getFullYear()} ${esc(topic)} ${esc(ui.newsletter_word)} · Newsletter Bot 📰</div>\n</td></tr>\n<tr><td style=\"background:linear-gradient(90deg,#e53935,#fb8c00,#e53935);height:4px;font-size:0;\">&nbsp;</td></tr>\n\n</table></td></tr></table>\n</body></html>`;\n\nlet subject;\nif (lang.code==='ta') subject=`📰 ${topic} செய்திமடல் — ${currentDate}`;\nelse if (lang.code==='ml') subject=`📰 ${topic} ന്യൂസ്‌ലെറ്റർ — ${currentDate}`;\nelse if (lang.code==='hi') subject=`📰 ${topic} न्यूज़लेटर — ${currentDate}`;\nelse if (lang.code==='te') subject=`📰 ${topic} వార్తాలేఖ — ${currentDate}`;\nelse if (lang.code==='kn') subject=`📰 ${topic} ಸುದ್ದಿಪತ್ರ — ${currentDate}`;\nelse subject=`📰 ${topic} ${ui.newsletter_word} — ${currentDate}`;\n\nreturn [{ newsletterHtml: html, subject, topic, language: lang, channelId, currentDate, slackArticles, articleCount }];"
+      },
+      "id": "80958aea-3f57-424c-95cf-d2909a238db7",
+      "name": "Build Newsletter HTML",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        480,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "sathyabama1211@gmail.com",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.newsletterHtml }}",
+        "options": {
+          "appendAttribution": false,
+          "senderName": "Newsletter Bot 📰"
+        }
+      },
+      "id": "4b495517-90be-46b7-9ba2-b0e6afc39a83",
+      "name": "Send Newsletter Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        720,
+        288
+      ],
+      "webhookId": "552f89e3-c376-454d-b28f-a3662ba95e2e",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "vtwZlWePNyVvBjnO",
+          "name": "sat gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json;\nconst topic = input.topic || 'Newsletter';\nconst date = input.currentDate || '';\nconst articles = input.slackArticles || [];\nconst count = input.articleCount || 0;\nconst channelId = input.channelId || '';\n\nconst lines = articles.map((a,i) =>\n  `${i+1}. <${a.url}|${a.title}> — _${a.source}_`\n).join('\\n');\n\nconst text = `✅ *${topic} Newsletter* is ready!\\n\\n` +\n  `📋 *Top Headlines* _(click any to read):_\\n\\n${lines}\\n\\n` +\n  `📧 Full newsletter sent to email\\n` +\n  `📰 ${count} stories | 📅 ${date}`;\n\nreturn [{ text, channelId }];"
+      },
+      "id": "27f94498-c0b9-4269-9e00-678210cf0c5d",
+      "name": "Build Slack Message",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        720,
+        112
+      ]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "={{ $json.channelId }}",
+          "mode": "id"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {
+          "mrkdwn": true
+        }
+      },
+      "id": "b3778cf6-cc31-4f6b-9463-5b39bb0b1461",
+      "name": "Slack Done Reply",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.3,
+      "position": [
+        960,
+        112
+      ],
+      "webhookId": "a71e8dc0-47e9-486f-8935-b3eb63969169",
+      "credentials": {
+        "slackOAuth2Api": {
+          "id": "ToESnWkpIhn9kiaK",
+          "name": "Slack oauth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "trigger": [
+          "message"
+        ],
+        "channelId": {
+          "__rl": true,
+          "value": "C0AGBK8DMFG",
+          "mode": "list",
+          "cachedResultName": "all-newgenerate"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        -944,
+        144
+      ],
+      "id": "75b32135-7037-49b5-9051-fdfe81bb3e8c",
+      "name": "Slack Trigger",
+      "webhookId": "4a6921b2-df21-4258-a44b-5d29c66747d0",
+      "credentials": {
+        "slackApi": {
+          "id": "tumGHWZVYJSUMgtn",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Extract Topic and Language": {
+      "main": [
+        [
+          {
+            "node": "Is Valid Request?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Valid Request?": {
+      "main": [
+        [
+          {
+            "node": "Detect Language and Build Params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Language and Build Params": {
+      "main": [
+        [
+          {
+            "node": "Send Processing Message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Google News RSS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Google News RSS": {
+      "main": [
+        [
+          {
+            "node": "Prepare Articles",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Articles": {
+      "main": [
+        [
+          {
+            "node": "Build Newsletter HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Newsletter HTML": {
+      "main": [
+        [
+          {
+            "node": "Send Newsletter Email",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Build Slack Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Slack Message": {
+      "main": [
+        [
+          {
+            "node": "Slack Done Reply",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Slack Trigger": {
+      "main": [
+        [
+          {
+            "node": "Extract Topic and Language",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "timezone": "Asia/Kolkata",
+    "callerPolicy": "workflowsFromSameOwner",
+    "executionTimeout": -1
+  },
+  "versionId": "377c9b8b-6058-4d7f-9739-f05e0139da77",
+  "meta": {
+    "instanceId": "2d8dc24cd30f16bf10fd8e81a49f0c53879155c8b2f28f3aa7f2ce16dac0525c"
+  },
+  "id": "0n2BKcfJoFqbcw7g",
+  "tags": []
+}
