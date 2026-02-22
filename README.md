@@ -1,153 +1,222 @@
 # 📰 AI-Powered Multilingual Newsletter Bot
 
-> Automatically generates and delivers beautifully designed HTML newsletters via Gmail — triggered by a simple Slack message in any language.
+> Send one Slack message in **any language** → get a professionally designed HTML newsletter in your Gmail inbox within seconds. Built with n8n, Google News RSS, Slack, and Gmail. **100% free to run.**
 
-![n8n](https://img.shields.io/badge/n8n-workflow-orange?style=flat-square&logo=n8n)
-![Slack](https://img.shields.io/badge/Slack-triggered-4A154B?style=flat-square&logo=slack)
-![Gmail](https://img.shields.io/badge/Gmail-delivery-EA4335?style=flat-square&logo=gmail)
-![Google News](https://img.shields.io/badge/Google%20News-RSS-4285F4?style=flat-square&logo=google)
-![Languages](https://img.shields.io/badge/Languages-6+-brightgreen?style=flat-square)
+<div align="center">
+
+![n8n](https://img.shields.io/badge/Built%20with-n8n-FF6D5A?style=for-the-badge&logo=n8n&logoColor=white)
+![Slack](https://img.shields.io/badge/Triggered%20by-Slack-4A154B?style=for-the-badge&logo=slack&logoColor=white)
+![Gmail](https://img.shields.io/badge/Delivered%20via-Gmail-EA4335?style=for-the-badge&logo=gmail&logoColor=white)
+![Free](https://img.shields.io/badge/Cost-100%25%20Free-brightgreen?style=for-the-badge)
+![Languages](https://img.shields.io/badge/Languages-6+-blue?style=for-the-badge)
+
+</div>
 
 ---
 
-## ✨ What It Does
+## 🎯 What Is This?
 
-Just type a message in Slack like:
+A fully automated newsletter bot that monitors your Slack channel and generates beautiful HTML newsletters on demand.
 
+**You type in Slack:**
 ```
-generate newsletter for AI technology
+generate newsletter for cricket
+```
+```
 தமிழ்நாடு அரசியல் செய்திகள்
-cricket world cup news
-Kerala business news
+```
+```
+AI technology news
 ```
 
-Within seconds, the bot:
-1. 🔍 Detects your language automatically
-2. 📡 Fetches latest news from Google News RSS
-3. 🎨 Generates a professional HTML newsletter
-4. 📧 Sends it to your Gmail inbox
-5. ✅ Replies in Slack with clickable top headlines
+**Bot delivers:**
+- ✅ Instant Slack confirmation — "⏳ Generating..."
+- 📧 Professional HTML newsletter to your Gmail
+- 💬 Slack reply with top 5 clickable headlines
+- 🌍 Full UI in your language (Tamil/Hindi/Malayalam etc.)
 
 ---
 
-## 🖼️ Newsletter Preview
+## 🖼️ Newsletter Layout
 
-The newsletter features a clean, professional light theme with:
-- 🔴 Gradient header with topic initial logo
-- 📜 Scrolling news ticker
-- 🗞️ Hero story with image
-- 📰 Two-column layout (main + sidebar)
-- 📋 Latest news sidebar with numbered items
-- 🏷️ Trending hashtags
-- 📱 More stories section
-- 🌐 Full multilingual UI support
+```
+┌─────────────────────────────────────────────────────────┐
+│  ████ GRADIENT TOP STRIPE ████                          │
+├─────────────────────────────────────────────────────────┤
+│              🔴  Logo Circle                            │
+│         DAILY DIGEST · AI-POWERED                       │
+│         Topic Name    Newsletter                        │
+│         Sunday, 22 February 2026                        │
+│         EDITION #444 · 10 STORIES                       │
+├─────────────────────────────────────────────────────────┤
+│  🔹 Scrolling ticker with article headlines... 🔹       │
+├────────────────────────────────┬────────────────────────┤
+│  HERO STORY                    │  ┌──────────────────┐  │
+│  [Image]  Headline             │  │  LATEST NEWS     │  │
+│           Source | Date        │  │  1. Article...   │  │
+│           Description...       │  │  2. Article...   │  │
+│           [READ FULL STORY]    │  │  3. Article...   │  │
+│                                │  │  4. Article...   │  │
+│  MORE NEWS ─────────────────   │  ├──────────────────┤  │
+│  [Card 1]        [Card 2]      │  │  🏷 TRENDING     │  │
+│  Badge Headline  Badge Headline│  │  #Topic #News    │  │
+│  Source · Date   Source · Date │  └──────────────────┘  │
+│  Description     Description   │                         │
+│  Read More →     Read More →   │                         │
+├────────────────────────────────┴────────────────────────┤
+│  MORE STORIES                                           │
+│  [Card]    [Card]    [Card]    [Card]                   │
+├─────────────────────────────────────────────────────────┤
+│           Dark Footer · Links · Copyright               │
+│  ████ GRADIENT BOTTOM STRIPE ████                       │
+└─────────────────────────────────────────────────────────┘
+```
 
 ---
 
 ## 🌍 Supported Languages
 
-| Language | Script | Google News |
-|----------|--------|-------------|
-| English | Latin | ✅ |
-| Tamil (தமிழ்) | Tamil | ✅ |
-| Hindi (हिन्दी) | Devanagari | ✅ |
-| Malayalam (മലയാളം) | Malayalam | ✅ |
-| Telugu (తెలుగు) | Telugu | ✅ |
-| Kannada (ಕನ್ನಡ) | Kannada | ✅ |
+| Language | Type your query in... | Newsletter UI |
+|---|---|---|
+| 🇬🇧 English | `cricket news` | LATEST NEWS, Read More → |
+| 🇮🇳 Tamil | `தமிழ்நாடு செய்திகள்` | சமீபத்திய செய்திகள், மேலும் படிக்க → |
+| 🇮🇳 Hindi | `क्रिकेट समाचार` | ताज़ा खबरें, और पढ़ें → |
+| 🇮🇳 Malayalam | `Kerala വാർത്ത` | ഏറ്റവും പുതിയ വാർത്തകൾ |
+| 🇮🇳 Telugu | `cricket వార్తలు` | తాజా వార్తలు |
+| 🇮🇳 Kannada | `ಕ್ರಿಕೆಟ್ ಸುದ್ದಿ` | ತಾಜಾ ಸುದ್ದಿ |
+
+Language is **automatically detected** using Unicode ranges — no AI API needed!
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ How It Works
 
 ```
-Slack Message (every 1 min poll)
-        ↓
-Extract Topic & Language (Unicode detection)
-        ↓
-Is Valid Request? (has news/newsletter keyword?)
-        ↓ YES
+Slack Message
+      │
+      ▼
+Extract Topic & Language
+(Unicode detection, keyword filter)
+      │
+      ▼
+Is Valid Request?
+(contains news / newsletter / செய்தி / समाचार ?)
+      │ YES
+      ▼
 Detect Language & Build Params
-        ↓
-┌───────────────────┐
-│ Send Processing   │  → Slack: "⏳ Generating..."
-│ Fetch Google News │  → RSS feed in user's language
-└───────────────────┘
-        ↓
-Prepare Articles (clean, deduplicate, extract images)
-        ↓
-Build Newsletter HTML (professional email template)
-        ↓
-┌───────────────────┐
-│ Send Gmail        │  → HTML newsletter to inbox
-│ Build Slack Msg   │  → Clickable headlines
-└───────────────────┘
-        ↓
-Slack Done Reply ✅
+(translate topic → English search query)
+(build Google News RSS language params)
+      │
+      ├─────────────────────────────────────┐
+      ▼                                     ▼
+Send Processing Message              Fetch Google News RSS
+"⏳ Generating..."                   (in user's language)
+                                           │
+                                           ▼
+                                     Prepare Articles
+                                     (clean, deduplicate,
+                                      extract images)
+                                           │
+                                           ▼
+                                     Build Newsletter HTML
+                                     (professional template,
+                                      unique image per article)
+                                           │
+                               ┌───────────┴───────────┐
+                               ▼                       ▼
+                         Send Gmail              Build Slack Message
+                         Newsletter              (clickable headlines)
+                                                       │
+                                                       ▼
+                                                Slack Done Reply ✅
 ```
 
 ---
 
-## 🧩 Workflow Nodes
+## 🧩 Nodes Explained
 
-| # | Node | Type | Purpose |
-|---|------|------|---------|
-| 1 | Every 1 Minute | Schedule Trigger | Polls Slack every minute |
-| 2 | Read Slack Messages | Slack | Reads last 5 messages (last 70 sec) |
-| 3 | Extract Topic and Language | Code | Detects language, filters bots |
-| 4 | Is Valid Request? | IF | Skips if no news keyword |
-| 5 | Detect Language and Build Params | Code | Translates topic, builds RSS params |
-| 6 | Send Processing Message | Slack | Sends "⏳ Generating..." |
-| 7 | Fetch Google News RSS | RSS Feed | Fetches news in user's language |
-| 8 | Prepare Articles | Code | Cleans and structures articles |
-| 9 | Build Newsletter HTML | Code | Generates full HTML email |
-| 10 | Send Newsletter Email | Gmail | Delivers newsletter |
-| 11 | Build Slack Message | Code | Formats clickable headlines |
-| 12 | Slack Done Reply | Slack | Posts success message |
+| # | Node | Purpose |
+|---|---|---|
+| 1 | **Slack Trigger** | Fires instantly when message sent in channel |
+| 2 | **Extract Topic and Language** | Filters bots, detects language via Unicode |
+| 3 | **Is Valid Request?** | Checks for news/newsletter keyword |
+| 4 | **Detect Language and Build Params** | Translates topic, builds RSS params |
+| 5 | **Send Processing Message** | Sends ⏳ status to Slack |
+| 6 | **Fetch Google News RSS** | Gets news in user's language, no API key needed |
+| 7 | **Prepare Articles** | Cleans titles, extracts images, deduplicates |
+| 8 | **Build Newsletter HTML** | Generates full professional HTML email |
+| 9 | **Send Newsletter Email** | Delivers via Gmail OAuth2 |
+| 10 | **Build Slack Message** | Formats 5 clickable headline links |
+| 11 | **Slack Done Reply** | Posts ✅ success message to channel |
 
 ---
 
-## 🚀 Setup Guide
+## 🚀 Quick Start
 
-### Prerequisites
-- [n8n](https://n8n.io/) (self-hosted or cloud)
+### Requirements
+- [n8n](https://n8n.io/) — self-hosted or cloud
 - Slack workspace with admin access
 - Gmail account
-- Google account (for Slack OAuth)
+- Google News RSS — **no API key needed**
+
+---
 
 ### Step 1 — Import Workflow
-1. Download `Newsletter-SLACK-TRIGGER-FINAL.json`
+
+1. Download `Newsletter-UNIQUE-IMAGES-FINAL.json`
 2. Open n8n → **Workflows** → **Import from file**
-3. Select the JSON file
+3. Select the downloaded JSON file
 
-### Step 2 — Configure Credentials
+---
 
-#### Slack OAuth2
-1. Go to [api.slack.com/apps](https://api.slack.com/apps) → Create New App
-2. Add Bot Token Scopes: `channels:history`, `channels:read`, `chat:write`
-3. Install to workspace → copy **Bot User OAuth Token**
-4. In n8n → Credentials → New → Slack OAuth2 → paste token
+### Step 2 — Set Up Slack Credential
 
-#### Gmail OAuth2
-1. In n8n → Credentials → New → Gmail OAuth2
-2. Follow Google OAuth flow
+1. Go to [api.slack.com/apps](https://api.slack.com/apps) → **Create New App**
+2. Choose **From scratch** → give it a name (e.g. `News_bot`)
+3. Go to **OAuth & Permissions** → add these Bot Token Scopes:
+   - `channels:history`
+   - `channels:read`
+   - `chat:write`
+4. Click **Install to Workspace** → copy the **Bot User OAuth Token** (`xoxb-...`)
+5. In n8n → **Credentials** → **New** → search `Slack API` → paste token
+6. Enable **Event Subscriptions** in your Slack app:
+   - Copy webhook URL from Slack Trigger node in n8n
+   - Paste into Request URL → wait for ✅ Verified
+   - Add bot event: `message.channels`
+   - Click **Save Changes** → **Reinstall to Workspace**
+
+---
+
+### Step 3 — Set Up Gmail Credential
+
+1. In n8n → **Credentials** → **New** → search `Gmail OAuth2`
+2. Follow the Google OAuth2 flow
 3. Connect your Gmail account
 
-### Step 3 — Update Channel ID
-In **Read Slack Messages** node:
-- Change `channelId` to your Slack channel ID
-- Find channel ID: Right-click channel in Slack → **Copy Link** → ID is at the end
+---
 
-### Step 4 — Update Email Address
-In **Send Newsletter Email** node:
-- Change `sendTo` to your email address
+### Step 4 — Configure the Workflow
 
-### Step 5 — Set Time Filter
-In **Read Slack Messages** node → **Filters**:
-- **Oldest** → switch to Expression mode → `{{ Math.floor(Date.now()/1000) - 70 }}`
-- This ensures each message is processed only once
+**Update your channel:**
+In **Slack Trigger** node → **Channel to Watch** → select your channel
+
+**Update email recipient:**
+In **Send Newsletter Email** node → change `sendTo` to your email address
+
+---
+
+### Step 5 — Invite Bot to Channel
+
+In your Slack channel, type:
+```
+/invite @News_bot
+```
+
+---
 
 ### Step 6 — Activate
-Toggle workflow **ON** in top right corner ✅
+
+Toggle the workflow **ON** (top right in n8n) ✅
 
 ---
 
@@ -155,20 +224,23 @@ Toggle workflow **ON** in top right corner ✅
 
 ### English
 ```
-generate newsletter for AI technology
-cricket world cup news
+generate newsletter for cricket
+AI technology news
 latest news india
 stock market news today
+generate newsletter for IPL 2026
+Elon Musk news
 ```
 
-### Tamil
+### Tamil தமிழ்
 ```
 தமிழ்நாடு அரசியல் செய்திகள்
 சினிமா செய்திகள்
 விளையாட்டு செய்திகள்
+திமுக அதிமுக செய்திகள்
 ```
 
-### Hindi
+### Hindi हिन्दी
 ```
 क्रिकेट समाचार
 भारत की ताज़ा खबरें
@@ -176,91 +248,164 @@ stock market news today
 
 ### Mixed
 ```
-Tamil Nadu politics news
-Kerala business செய்தி
+Kerala politics news
+Chennai business news
+Tamil Nadu sports செய்தி
 ```
 
 ---
 
-## 📁 File Structure
+## 🎨 Image Strategy
+
+Each article in the newsletter gets a **unique image**:
 
 ```
-📦 slack-newsletter-bot
- ┣ 📄 Newsletter-SLACK-TRIGGER-FINAL.json   ← Main n8n workflow
- ┣ 📄 README.md                              ← This file
- ┗ 📁 node-code/
-    ┣ 📄 extract-topic.js                   ← Node 3 code
-    ┣ 📄 detect-language.js                 ← Node 5 code
-    ┣ 📄 prepare-articles.js                ← Node 8 code
-    ┗ 📄 build-newsletter-html.js           ← Node 9 code
+Priority 1 → Real image from RSS feed (if available)
+Priority 2 → Unique Picsum photo based on article title hash
+             Different title = different seed = different image
+             Always loads reliably in Gmail ✅
 ```
-
----
-
-## ⚙️ How Language Detection Works
 
 ```javascript
-// Unicode range detection — no API needed
-if (/[\u0B80-\u0BFF]/.test(text)) → Tamil
-if (/[\u0D00-\u0D7F]/.test(text)) → Malayalam
-if (/[\u0900-\u097F]/.test(text)) → Hindi
-if (/[\u0C00-\u0C7F]/.test(text)) → Telugu
-if (/[\u0C80-\u0CFF]/.test(text)) → Kannada
+// Each article title generates a unique number → unique image
+const uniqueNum = title.split('')
+  .reduce((acc, c) => acc + c.charCodeAt(0), slotIndex * 100);
+const seed = uniqueNum % 1000;
+// "DMK wins Tamil Nadu election" → seed 472 → unique photo
+// "IPL 2026 Final Chennai"       → seed 891 → different photo
 ```
-
-Translation dictionary converts native language topics to English for Google News search, then fetches results in the original language using proper `hl`, `gl`, and `ceid` parameters.
-
----
-
-## 🎨 Newsletter Design
-
-| Section | Details |
-|---------|---------|
-| Header | White background, gradient logo circle, centered layout |
-| Ticker | Scrolling marquee with article headlines |
-| Hero | 52/48 split — image + full story details |
-| More News | Two equal cards side by side |
-| Sidebar | Numbered list + trending hashtags |
-| More Stories | 4-column grid |
-| Footer | Dark slate with links |
-| Images | Picsum Photos (reliable in Gmail) |
 
 ---
 
 ## 🔧 Customization
 
-### Change newsletter recipient
-In **Send Newsletter Email** node → update `sendTo` field
+### Add a new language
 
-### Change Slack channel
-In **Read Slack Messages** node → update `channelId`
+In **Detect Language and Build Params** node, add to `uiStrings`:
 
-### Add more languages
-In **Detect Language and Build Params** node → add to `translations` object and `uiStrings`
+```javascript
+bn: {
+  latest_news: 'সর্বশেষ সংবাদ',
+  more_news: 'আরও সংবাদ',
+  read_more: 'আরও পড়ুন',
+  newsletter_word: 'নিউজলেটার',
+  edition: 'সংস্করণ',
+  stories: 'সংবাদ',
+  trending: 'ট্রেন্ডিং',
+  breaking: 'ব্রেকিং',
+  read_full_story: 'পুরো গল্প পড়ুন',
+  daily_digest: 'দৈনিক সংবাদ সারসংক্ষেপ',
+  digest_tagline: 'আপনার দৈনিক AI সংবাদ সংকলন',
+  more_stories: 'আরও গল্প'
+}
+```
 
-### Change polling frequency
-In **Every 1 Minute** node → adjust interval (remember to update Oldest filter accordingly)
+And add to `langMap`:
+```javascript
+bn: { hl: 'bn', gl: 'IN', ceid: 'IN:bn' }
+```
+
+### Change newsletter accent color
+
+In **Build Newsletter HTML** node, find and replace:
+```javascript
+'#e53935'   // red accent → change to any hex color
+```
+
+### Change news freshness
+
+In **Fetch Google News RSS** node URL, update:
+```
+when:1d  → last 24 hours
+when:2d  → last 48 hours (current default)
+when:7d  → last week
+```
+
+---
+
+## ⚠️ Duplicate Prevention
+
+The bot uses two layers of protection to avoid processing the same message twice:
+
+**Layer 1 — Bot message filter:**
+```javascript
+const isBot = !!(($json.bot_id) || $json.subtype === 'bot_message');
+// Bot replies are automatically ignored ✅
+```
+
+**Layer 2 — Time filter (polling mode only):**
+
+In **Read Slack Messages** node → Filters → Oldest field → switch to Expression:
+```
+{{ Math.floor(Date.now()/1000) - 70 }}
+```
+Only messages from the last 70 seconds are processed — so each message runs exactly once.
+
+---
+
+## 📁 Repository Structure
+
+```
+📦 slack-newsletter-bot/
+ ┣ 📄 README.md
+ ┣ 📄 Newsletter-UNIQUE-IMAGES-FINAL.json    ← Import this into n8n
+ ┗ 📁 node-code/
+    ┣ 📄 01-extract-topic.js
+    ┣ 📄 02-detect-language.js
+    ┣ 📄 03-prepare-articles.js
+    ┗ 📄 04-build-newsletter-html.js
+```
 
 ---
 
 ## 🛠️ Tech Stack
 
-- **[n8n](https://n8n.io/)** — Workflow automation
-- **[Google News RSS](https://news.google.com/rss)** — Free news feed, no API key
-- **[Slack API](https://api.slack.com/)** — Message trigger and reply
-- **[Gmail API](https://developers.google.com/gmail)** — Newsletter delivery
-- **[Picsum Photos](https://picsum.photos/)** — Reliable placeholder images
+| Tool | Purpose | Cost |
+|---|---|---|
+| [n8n](https://n8n.io/) | Workflow automation | Free (self-hosted) |
+| [Google News RSS](https://news.google.com/rss) | News feed | Free, no API key |
+| [Slack API](https://api.slack.com/) | Trigger + reply | Free |
+| [Gmail API](https://developers.google.com/gmail) | Email delivery | Free |
+| [Picsum Photos](https://picsum.photos/) | Fallback images | Free |
+
+**Total running cost: $0** ✅
 
 ---
 
-## 📝 License
+## 🧪 Testing Checklist
 
-MIT License — feel free to use, modify, and distribute.
+After setup, verify each feature works:
+
+- [ ] Send `generate newsletter for cricket` → newsletter arrives in Gmail
+- [ ] Send `தமிழ்நாடு செய்திகள்` → Tamil UI labels appear in newsletter
+- [ ] Send `hello` → **no response** (keyword filter working ✅)
+- [ ] Send same message twice → **one newsletter only** (duplicate prevention ✅)
+- [ ] Open newsletter → all 10 images are **different** from each other ✅
+- [ ] Click headline in Slack reply → opens correct article URL ✅
+- [ ] Check ticker → scrolls with all article headlines ✅
 
 ---
 
-## 🙋 Author
+## 🤝 Contributing
 
-Built with ❤️ using n8n automation + Google News RSS
+Pull requests welcome! Ideas for improvement:
 
-If this helped you, please ⭐ star the repo!
+- Add more Indian languages (Bengali, Gujarati, Punjabi, Odia)
+- Add daily scheduled digest at a fixed time
+- Fetch real article OG images via HTTP Request node
+- Add WhatsApp trigger support
+- Add topic category tabs (Sports / Politics / Business)
+
+---
+
+## 📄 License
+
+MIT License — free to use, modify, and distribute.
+
+---
+
+## ⭐ Support
+
+If this project helped you, please give it a **star** ⭐
+
+Built with ❤️ using n8n + Google News RSS
